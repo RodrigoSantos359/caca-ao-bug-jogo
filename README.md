@@ -38,3 +38,4 @@ desafios.py      desafios, dicas e respostas (ficam no servidor)
 templates/       páginas HTML
 static/          imagens, CSS e JavaScript do jogo
 ```
+Desenvolvido por ELI SAMARA OLIVEIRA DE LIMA .Sistemas de Informação . UFRPE/UAST.2026
