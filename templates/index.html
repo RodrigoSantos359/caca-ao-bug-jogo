@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b121a">
+    <title>Caça ao Bug - Menu Principal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ estatico('style.css') }}">
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Menu de Botões posicionado na área livre da imagem limpa -->
+        <div class="menu-actions">
+            <button class="btn btn-jogar" onclick="iniciarJogo()">JOGAR</button>
+            <div class="sub-buttons">
+                <button class="btn btn-secundario" onclick="abrirOpcoes()">OPÇÕES</button>
+                <button class="btn btn-secundario" onclick="abrirSobre()">SOBRE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel SOBRE -->
+    <div class="painel" id="painel-sobre" hidden>
+        <div class="painel-card" role="dialog" aria-modal="true" aria-labelledby="titulo-sobre" tabindex="-1">
+            <div class="painel-topo">
+                <h2 id="titulo-sobre">Sobre o Caça ao Bug</h2>
+                <button type="button" class="painel-fechar" data-fechar aria-label="Fechar">✕</button>
+            </div>
+            <div class="painel-corpo">
+                <p>Um jogo para aprender <strong>Python</strong> e lógica de programação. Um robô atravessa cenários e encontra bugs no caminho. Para seguir em frente, você corrige o código de cada bug.</p>
+
+                <h3>Como jogar</h3>
+                <ul>
+                    <li><strong>Andar:</strong> setas ← → (ou os botões na tela, no celular).</li>
+                    <li><strong>Pular:</strong> ESPAÇO ou ↑ (ou o botão ⤒). Use para passar pelos blocos e pegar chips no alto.</li>
+                    <li><strong>Desafio:</strong> ao encontrar um bug, abre um código com uma lacuna. Escolha a peça certa e clique em VERIFICAR.</li>
+                    <li>Se errar, você recebe uma dica sobre aquela peça e perde 1 chip.</li>
+                </ul>
+
+                <h3>Chips e meta</h3>
+                <ul>
+                    <li>Colete chips pelo cenário. Responder um desafio rápido dá chips de bônus.</li>
+                    <li>Para passar de mundo é preciso atingir a meta de chips mostrada no topo. Se faltar, o mundo recomeça.</li>
+                    <li>Só dá para jogar um mundo depois de concluir o anterior.</li>
+                </ul>
+
+                <h3>Os mundos</h3>
+                <ul>
+                    <li><strong>Mundo 1:</strong> Floresta dos Loops (<code>while</code>, <code>for</code>, <code>range</code>, <code>break</code>).</li>
+                    <li><strong>Mundo 2:</strong> Caverna das Decisões (<code>if</code>, <code>else</code> e comparações).</li>
+                    <li><strong>Mundo 3:</strong> Laboratório de Funções (<code>def</code>, <code>return</code> e parâmetros).</li>
+                </ul>
+
+                <p class="painel-rodape">Projeto acadêmico de computação, feito para ajudar quem está começando a programar.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel OPÇÕES -->
+    <div class="painel" id="painel-opcoes" hidden>
+        <div class="painel-card painel-pequeno" role="dialog" aria-modal="true" aria-labelledby="titulo-opcoes" tabindex="-1">
+            <div class="painel-topo">
+                <h2 id="titulo-opcoes">Opções</h2>
+                <button type="button" class="painel-fechar" data-fechar aria-label="Fechar">✕</button>
+            </div>
+            <div class="painel-corpo">
+                <div class="opcao">
+                    <div class="opcao-texto"><strong>Som</strong><span>Efeitos sonoros do jogo</span></div>
+                    <button type="button" class="chave" id="op-som" role="switch" aria-checked="true" aria-label="Som"><i></i></button>
+                </div>
+
+                <div class="opcao" id="linha-tela-cheia" hidden>
+                    <div class="opcao-texto"><strong>Tela cheia</strong><span>Joga ocupando a tela toda</span></div>
+                    <button type="button" class="chave" id="op-tela" role="switch" aria-checked="false" aria-label="Tela cheia"><i></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CHAVE_SOM = 'cacaAoBug.som';
+
+        function iniciarJogo() {
+            window.location.href = "/minimundos";
+        }
+
+        // ----- Painéis -----
+        let painelAberto = null;
+        let focoAnterior = null;
+
+        function abrirPainel(id) {
+            fecharPainel();
+            focoAnterior = document.activeElement;
+            painelAberto = document.getElementById(id);
+            painelAberto.hidden = false;
+            const card = painelAberto.querySelector('.painel-card');
+            card.scrollTop = 0;
+            card.focus({ preventScroll: true });
+        }
+
+        function fecharPainel() {
+            if (!painelAberto) return;
+            painelAberto.hidden = true;
+            painelAberto = null;
+            if (focoAnterior && focoAnterior.focus) focoAnterior.focus({ preventScroll: true });
+        }
+
+        document.querySelectorAll('.painel').forEach(function (p) {
+            // clicar fora do cartão fecha
+            p.addEventListener('click', function (e) { if (e.target === p) fecharPainel(); });
+        });
+        document.querySelectorAll('[data-fechar]').forEach(function (b) {
+            b.addEventListener('click', fecharPainel);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') fecharPainel();
+        });
+
+        function abrirSobre() {
+            abrirPainel('painel-sobre');
+        }
+
+        // ----- Opções -----
+        const opSom = document.getElementById('op-som');
+        const opTela = document.getElementById('op-tela');
+
+        function somLigado() {
+            try { return localStorage.getItem(CHAVE_SOM) !== '0'; } catch (erro) { return true; }
+        }
+
+        function marcarChave(botao, ligada) {
+            botao.setAttribute('aria-checked', ligada ? 'true' : 'false');
+            botao.classList.toggle('ligada', ligada);
+        }
+
+        function abrirOpcoes() {
+            marcarChave(opSom, somLigado());
+            marcarChave(opTela, !!(document.fullscreenElement || document.webkitFullscreenElement));
+            abrirPainel('painel-opcoes');
+        }
+
+        opSom.addEventListener('click', function () {
+            const ligar = !somLigado();
+            try { localStorage.setItem(CHAVE_SOM, ligar ? '1' : '0'); } catch (erro) { /* sem armazenamento */ }
+            marcarChave(opSom, ligar);
+        });
+
+        // Tela cheia (só aparece se o navegador permitir)
+        (function () {
+            const el = document.documentElement;
+            const pedir = el.requestFullscreen || el.webkitRequestFullscreen;
+            if (!pedir) return;
+            document.getElementById('linha-tela-cheia').hidden = false;
+            opTela.addEventListener('click', function () {
+                const ativa = document.fullscreenElement || document.webkitFullscreenElement;
+                if (ativa) {
+                    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+                } else {
+                    const p = pedir.call(el);
+                    if (p && p.catch) p.catch(function () {});
+                }
+            });
+            ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (nome) {
+                document.addEventListener(nome, function () {
+                    marcarChave(opTela, !!(document.fullscreenElement || document.webkitFullscreenElement));
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

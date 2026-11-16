@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b121a">
+    <title>Caça ao Bug - Mapa de Mundos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ estatico('style-mundos.css') }}">
+</head>
+<body>
+
+    <!-- Cabeçalho fixo no topo -->
+    <header class="mapa-header">
+        <div class="titulo-mapa">MAPA DO PROGRAMADOR</div>
+        <div class="info-progresso">
+            <span class="fase-contador" id="contador-mundos">Progresso: 0/3 Mundos</span>
+            <button class="btn-fechar" onclick="zerarProgresso()" title="Apaga todo o progresso e deixa só o Mundo 1 liberado">↺ Zerar</button>
+            <button class="btn-fechar" onclick="voltarMenu()">✕ Sair</button>
+        </div>
+    </header>
+
+    <!-- Container com rolagem ajustada -->
+    <div class="scroll-container">
+        
+        <!-- Mundo 1 -->
+        <div class="mundo-secao" data-mundo="1" onclick="entrarMundo(1)">
+            <div class="mundo-card">
+                <img src="{{ url_for('static', filename='ilha 1.png') }}" alt="Ilha 1" class="img-ilha">
+                <div class="conteudo-sobre-ilha">
+                    <div class="tag-mundo">Mundo 1</div>
+                    <h3>Floresta dos Loops</h3>
+                    <p>Laços de repetição <code>for</code> e <code>while</code></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mundo 2 (Alterado para a ilha 2) -->
+        <div class="mundo-secao bloqueado" data-mundo="2" onclick="entrarMundo(2)">
+            <div class="mundo-card">
+                <img src="{{ url_for('static', filename='ilha 2.png') }}" alt="Ilha 2" class="img-ilha">
+                <div class="conteudo-sobre-ilha">
+                    <div class="tag-mundo">Mundo 2</div>
+                    <h3>Caverna das Decisões</h3>
+                    <p>Estruturas <code>if</code>, <code>elif</code> e <code>else</code></p>
+                </div>
+                <span class="cadeado">🔒</span>
+            </div>
+        </div>
+
+        <!-- Mundo 3: mundo final do jogo -->
+        <div class="mundo-secao bloqueado" data-mundo="3" onclick="entrarMundo(3)">
+            <div class="mundo-card">
+                <img src="{{ url_for('static', filename='ilha 3.png') }}" alt="Ilha 3" class="img-ilha">
+                <div class="conteudo-sobre-ilha">
+                    <div class="tag-mundo especial">Mundo 3 · Fase Final</div>
+                    <h3>Laboratório de Funções</h3>
+                    <p>Modularização com <code>def</code></p>
+                </div>
+                <span class="cadeado">🔒</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // O progresso é guardado na aba pela tela do mundo (mesma chave)
+        const CHAVE_PROGRESSO = 'cacaAoBug.progresso';
+        // Mesma memória temporária da aba usada pelo jogo (para salvar de vez, troque por window.localStorage)
+        const ARMAZEM_PROGRESSO = window.sessionStorage;
+        const TOTAL_MUNDOS = 3;
+        const MUNDOS_PRONTOS = [1, 2, 3];   // mundos que já podem ser jogados
+
+        function mundoCompleto(numero) {
+            try {
+                const p = JSON.parse(ARMAZEM_PROGRESSO.getItem(CHAVE_PROGRESSO)) || {};
+                const m = (p.mundos || {})[numero];
+                return !!(m && m.completo);
+            } catch (erro) {
+                return false;
+            }
+        }
+
+        // Libera o mundo seguinte quando o anterior foi concluído e atualiza o contador
+        function atualizarMapa() {
+            let completos = 0;
+            document.querySelectorAll('.mundo-secao').forEach(function (secao) {
+                const numero = Number(secao.dataset.mundo);
+                if (mundoCompleto(numero)) completos++;
+
+                const liberado = numero === 1 || mundoCompleto(numero - 1);
+                if (liberado) {
+                    secao.classList.remove('bloqueado');
+                    const cadeado = secao.querySelector('.cadeado');
+                    if (cadeado) cadeado.remove();
+                }
+            });
+            document.getElementById('contador-mundos').textContent =
+                'Progresso: ' + completos + '/' + TOTAL_MUNDOS + ' Mundos';
+        }
+
+        function entrarMundo(numero) {
+            const secao = document.querySelector('.mundo-secao[data-mundo="' + numero + '"]');
+            if (secao.classList.contains('bloqueado')) return;
+
+            if (MUNDOS_PRONTOS.includes(numero)) {
+                window.location.href = "/mundo/" + numero;
+            } else {
+                alert("Este mundo ainda está em construção. Em breve!");
+            }
+        }
+
+        // Apaga todo o progresso salvo: só o Mundo 1 volta a ficar liberado
+        function zerarProgresso() {
+            if (!confirm('Apagar todo o seu progresso e voltar ao Mundo 1?')) return;
+            try {
+                ARMAZEM_PROGRESSO.removeItem(CHAVE_PROGRESSO);
+            } catch (erro) {
+                // sem armazenamento: nada para apagar
+            }
+            window.location.reload();
+        }
+
+        function voltarMenu() {
+            window.location.href = "/";
+        }
+
+        atualizarMapa();
+        // Ao voltar para esta página pelo botão "voltar" do navegador
+        window.addEventListener('pageshow', atualizarMapa);
+    </script>
+</body>
+</html>

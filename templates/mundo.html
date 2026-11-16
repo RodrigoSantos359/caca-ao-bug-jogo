@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b121a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Caça ao Bug - {{ nome }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ estatico('style-desafio.css') }}">
+</head>
+<body class="preparando">
+
+    <!-- Tela de carregamento: some quando o cenário terminou de carregar -->
+    <div class="carregando" id="carregando" hidden><div class="giro-carga" aria-hidden="true"></div>Carregando o cenário...</div>
+
+    <!-- Palco: janela que mostra uma parte do cenário -->
+    <div class="palco" id="palco">
+
+        <!-- Mundo: cenário largo que rola conforme o robô anda -->
+        <div class="mundo" id="mundo"
+             data-bug-src="{{ url_for('static', filename='bug.png') }}"
+             data-estaticos="{{ url_for('static', filename='') }}">
+            <!-- Balão de alerta quando o robô encontra um bug -->
+            <div class="alerta" id="alerta">!</div>
+
+            <!-- Robô -->
+            <div class="robo" id="robo">
+                <div class="robo-corpo">
+                    <img src="{{ url_for('static', filename='robo.png') }}" alt="Robô">
+                </div>
+                <div class="sombra"></div>
+            </div>
+        </div>
+
+        <div class="topo">
+            <div class="topo-esq">
+                <div class="titulo-mundo" id="titulo-mundo">{{ nome }}</div>
+                <div class="contador-chips" id="contador-chips" title="Chips (meta para passar de mundo)">
+                    <span class="chip-icone">1</span>
+                    <span id="chips-num">0/0</span>
+                </div>
+            </div>
+            <div class="topo-dir">
+                <button type="button" class="btn-sair" id="btn-tela-cheia" aria-label="Tela cheia" title="Tela cheia" hidden>⛶</button>
+                <button type="button" class="btn-sair" id="btn-som" aria-label="Som ligado" title="Ligar ou desligar o som">🔊</button>
+                <button type="button" class="btn-sair" onclick="window.location.href='{{ url_for('minimundos') }}'">✕ Sair</button>
+            </div>
+        </div>
+
+        <div class="dica-controle" id="dica-controle">Use ← → para andar e ESPAÇO para pular</div>
+
+        <!-- Final do mundo -->
+        <div class="fim" id="fim" hidden>
+            <div class="fim-card">
+                <h2 id="fim-titulo">{{ nome }} concluída!</h2>
+                {% if mundo_id == 3 %}<p id="fim-texto">Parabéns! Você derrotou todos os bugs e concluiu o Caça ao Bug.</p>{% else %}<p id="fim-texto">Você derrotou todos os bugs deste mundo.</p>{% endif %}
+                <p class="fim-chips" id="fim-chips"></p>
+                <div class="fim-acoes">
+                    <button type="button" class="btn btn-verificar" id="btn-mapa">VOLTAR AO MAPA</button>
+                    <button type="button" class="btn btn-limpar" id="btn-repetir">JOGAR DE NOVO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões para celular (ficam fixos na tela, fora do palco, para usar as laterais) -->
+    <div class="controles">
+        <button type="button" class="seta" id="btn-esq" aria-label="Andar para a esquerda">◀</button>
+        <button type="button" class="seta" id="btn-dir" aria-label="Andar para a direita">▶</button>
+    </div>
+    <div class="controles controles-dir">
+        <button type="button" class="seta seta-pulo" id="btn-pular" aria-label="Pular">⤒</button>
+    </div>
+
+
+    <!-- Aviso para girar o celular (só aparece em pé) -->
+    <div class="girar" id="girar">
+        <h2>Gire o celular</h2>
+        <p>O Caça ao Bug é jogado com o celular deitado (na horizontal).</p>
+    </div>
+
+    <!-- Desafio: abre como a tela de um computador quando o robô encontra um bug -->
+    <div class="modal" id="modal" hidden>
+        <div class="monitor" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-desafio">
+            <div class="monitor-moldura">
+                <div class="tela">
+                    <div class="barra-janela">
+                        <span class="pontos" aria-hidden="true"><i></i><i></i><i></i></span>
+                        <span class="nome-arquivo" id="nome-arquivo">bug.py</span>
+                        <span class="cronometro" id="cronometro" aria-hidden="true"></span>
+                        <span class="perda-janela" id="perda-janela" aria-hidden="true"></span>
+                        <span class="status-erro" aria-hidden="true">● 1 erro</span>
+                    </div>
+                    <div class="tela-conteudo">
+                        <div class="col-codigo">
+                        <h1 id="titulo-desafio"></h1>
+                        <p class="enunciado" id="enunciado"></p>
+
+                        <pre class="editor" id="editor" aria-label="Código com bug"></pre>
+                        </div>
+
+                        <div class="col-acoes">
+                        <div class="bandeja" id="bandeja" aria-label="Peças disponíveis"></div>
+
+                        <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+
+                        <div class="acoes">
+                            <button id="btn-verificar" class="btn btn-verificar">VERIFICAR</button>
+                            <button id="btn-limpar" class="btn btn-limpar">LIMPAR</button>
+                            <button id="btn-continuar" class="btn btn-verificar" hidden>CONTINUAR</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                <span class="led" aria-hidden="true"></span>
+            </div>
+            <div class="monitor-pe" aria-hidden="true"><div class="pescoco"></div><div class="base"></div></div>
+        </div>
+    </div>
+
+    <!-- Dados dos desafios (sem as respostas, que ficam no servidor) -->
+    <script type="application/json" id="dados-mundo"
+            data-mundo-id="{{ mundo_id }}"
+            data-nome="{{ nome }}"
+            data-url-validar="{{ url_for('validar_desafio') }}"
+            data-url-mapa="{{ url_for('minimundos') }}">{{ desafios|tojson }}</script>
+
+    <script src="{{ estatico('desafio.js') }}"></script>
+</body>
+</html>
